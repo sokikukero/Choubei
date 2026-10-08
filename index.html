@@ -56,7 +56,8 @@ input,textarea{font-family:inherit;font-size:16px}
 .list-item .body{flex:1;min-width:0}
 .list-item .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .list-item .meta{font-size:12px;color:var(--sub);margin-top:2px}
-.item-detail{padding:10px 12px 4px 36px;font-size:13px;color:var(--txt)}
+.item-detail{padding:10px 12px 4px 36px;font-size:13px;color:var(--txt);animation:detIn .16s ease}
+@keyframes detIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .item-detail .kv{margin-bottom:6px;line-height:1.5}
 .item-detail .kv>span{color:var(--sub)}
 .checkbox{
@@ -275,7 +276,14 @@ function render(){
   if(Route.page==='home') app.appendChild(homePage());
   else if(Route.page==='folder') app.appendChild(folderPage());
   else if(Route.page==='review') app.appendChild(reviewPage());
-  window.scrollTo(0,0);
+  if (Route._restore) {
+    const el = document.getElementById(Route._restore);
+    if (el) el.scrollIntoView({block:'nearest'});
+    delete Route._restore;
+  } else if (Route._scrollY) {
+    window.scrollTo(0, Route._scrollY);
+    delete Route._scrollY;
+  }
 }
 
 /* ---------- 首页：文件夹列表 ---------- */
@@ -364,7 +372,7 @@ function folderPage(){
     if(selMode){ cb.classList.toggle('on',selSet.has(it.id)); }
     // 展开/收起详情（仅正常模式下）
     if(!selMode && it._open){
-      const det=el(`<div class="item-detail">
+      const det=el(`<div class="item-detail" id="it-${it.id}">
         ${it.h?`<div class="kv"><b>提示：</b><span></span></div>`:''}
         <div class="kv"><b>答案：</b><span></span></div>
         <div class="kv"><b>正确次数：</b><span>${it.dot}</span></div>
@@ -383,8 +391,19 @@ function folderPage(){
     row.addEventListener('touchmove',cancel,{passive:true});
     // 题目区点击 → 编辑
     $('.click-edit',row).onclick=e=>{e.stopPropagation();if(selMode||fired)return;editItem(f,it);};
-    // 数字区点击 → 展开/收起提示与答案
-    $('.click-reveal',row).onclick=e=>{e.stopPropagation();if(selMode||fired)return;it._open=!it._open;render();};
+    // 数字区点击 → 展开/收起提示与答案（同时只展开一条，不跳动页面）
+    $('.click-reveal',row).onclick=e=>{
+      e.stopPropagation(); if(selMode||fired) return;
+      const y=window.scrollY;
+      if (it._open) { it._open=false; }
+      else {
+        f.items.forEach(o=>{ if(o!==it) delete o._open; });
+        it._open=true;
+        Route._restore='it-'+it.id;
+      }
+      Route._scrollY=y;
+      render();
+    };
     // 行点击：数字区优先，其余走题目区
     row.onclick=()=>{
       if(selMode){ if(selSet.has(it.id))selSet.delete(it.id); else selSet.add(it.id);
