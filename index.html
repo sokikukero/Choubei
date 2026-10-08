@@ -1,286 +1,883 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f7f7f8">
-<title>抽背</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>抽背助手</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f5f5f7;color:#222}
-button,input,textarea,select{font:inherit}button{border:0;border-radius:12px;padding:11px 15px;background:#222;color:white;cursor:pointer}button.secondary{background:#e7e7ea;color:#222}button.danger{background:#d33}button.good{background:#25864a}button.warn{background:#b77900}
-.app{max-width:720px;margin:auto;min-height:100vh;background:#fff}.top{padding:18px 18px 10px;position:sticky;top:0;background:#fff;z-index:5;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}.top h1{font-size:22px;margin:0}.view{padding:16px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.folders{display:grid;gap:10px}.folder{padding:15px;border:1px solid #ddd;border-radius:14px;display:flex;justify-content:space-between;align-items:center}.folder strong{font-size:16px}.muted{color:#888;font-size:13px}.card{border:1px solid #ddd;border-radius:16px;padding:16px;margin-bottom:12px}.field{display:grid;gap:7px;margin-bottom:13px}.field label{font-weight:600;font-size:14px}input,textarea,select{width:100%;border:1px solid #ccc;border-radius:10px;padding:11px;background:#fff}textarea{min-height:90px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap}.item{padding:13px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;gap:12px;position:relative}.count{font-weight:700;min-width:30px;text-align:right}.c0{color:#999}.c1{color:#d33}.c2{color:#25864a}.c3{color:#c58a00}.hint{background:#fff6d9;border-radius:12px;padding:13px;margin:12px 0}.answer{background:#eef8f0;border-radius:12px;padding:13px;margin:12px 0}.study{min-height:calc(100vh - 64px);display:grid;grid-template-rows:1fr auto 1fr auto;gap:10px;padding:16px}.studybox{border:1px solid #ddd;border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;white-space:pre-wrap;overflow:auto}.studyhint{min-height:55px;font-size:16px}.studyanswer{min-height:120px;font-size:20px}.studybuttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.progress{text-align:center;color:#777;font-size:13px}.empty{text-align:center;color:#888;padding:40px 10px}.modal{position:fixed;inset:0;background:#0006;display:flex;align-items:flex-end;justify-content:center;z-index:20}.modalbox{background:white;width:min(720px,100%);padding:20px;border-radius:20px 20px 0 0;max-height:90vh;overflow:auto}.close{float:right;background:#eee;color:#222}.redx{color:#d33;font-size:22px}.fileinput{display:none}
-.batch-bar{position:sticky;top:64px;background:#fff;border-bottom:1px solid #eee;padding:10px 16px;display:flex;gap:8px;align-items:center;z-index:4;flex-wrap:wrap}
-.item-select{display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;accent-color:#25864a}
-.item.batch-mode .item-select{display:block}
-.item.batch-mode{padding-left:38px}
+:root{
+  --bg:#f5f6f8; --card:#fff; --line:#e5e7eb; --txt:#1f2328; --sub:#6b7280;
+  --pri:#2563eb; --pri-d:#1d4ed8; --red:#dc2626; --green:#16a34a; --amber:#d97706; --gray:#9ca3af;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --safe:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--txt);font-size:16px;line-height:1.5;
+  overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:16px}
+/* ===== 顶部栏 ===== */
+.bar{
+  position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+}
+.bar .t{flex:1;font-weight:600;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--sub);flex:0 0 auto;
+}
+.icon-btn:hover{background:#f0f1f3}
+.icon-btn:active{background:#e6e8ec}
+.icon-btn svg{width:22px;height:22px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:40px;padding:0 16px;border-radius:10px;font-size:15px;font-weight:500;
+  background:var(--pri);color:#fff;transition:background .15s;
+}
+.btn:active{background:var(--pri-d)}
+.btn:disabled{opacity:.4}
+.btn.ghost{background:#fff;color:var(--txt);border:1px solid var(--line)}
+.btn.ghost:active{background:#f0f1f3}
+.btn.sm{height:32px;padding:0 12px;font-size:14px;border-radius:8px}
+.btn.red{background:var(--red)}.btn.green{background:var(--green)}
+/* ===== 内容区 ===== */
+.page{padding:12px;padding-bottom:calc(80px + var(--safe))}
+.page.tight{padding:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:8px}
+.list-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-bottom:1px solid var(--line);
+}
+.list-item:last-child{border-bottom:none}
+.list-item .body{flex:1;min-width:0}
+.list-item .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-item .meta{font-size:12px;color:var(--sub);margin-top:2px}
+.item-detail{padding:10px 12px 4px 36px;font-size:13px;color:var(--txt)}
+.item-detail .kv{margin-bottom:6px;line-height:1.5}
+.item-detail .kv>span{color:var(--sub)}
+.checkbox{
+  width:22px;height:22px;border:2px solid #cbd0d6;border-radius:6px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+}
+.checkbox.on{background:var(--pri);border-color:var(--pri)}
+.checkbox.on::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.empty{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}
+/* ===== 文件夹网格 ===== */
+.folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:12px}
+.folder-card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  padding:16px;display:flex;flex-direction:column;gap:6px;position:relative;cursor:pointer;
+  min-height:96px;
+}
+.folder-card:active{background:#f8f9fb}
+.folder-card .fn{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-card .fc{font-size:12px;color:var(--sub)}
+.folder-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:.3}
+.folder-card:hover .folder-actions,.folder-card:active .folder-actions{opacity:1}
+.folder-actions button{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.folder-actions button:hover{background:#f0f1f3;color:var(--txt)}
+.folder-actions svg{width:15px;height:15px}
+/* ===== 三块抽背 ===== */
+.review{display:flex;flex-direction:column;height:calc(100vh - 60px);padding:0}
+.block{
+  flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:20px;position:relative;cursor:pointer;user-select:none;
+  border-bottom:1px dashed var(--line);
+}
+.block:last-child{border-bottom:none}
+.block .bc{font-size:clamp(20px,6vw,34px);word-break:break-word;white-space:pre-wrap}
+.block .bcc{font-size:13px;color:var(--sub);margin-bottom:8px}
+.block .placeholder{color:#cbd0d6;font-size:15px}
+.block.q{background:#fff}
+.block.h{background:#fafbfc}
+.block.a{background:#f5f7fa}
+.block.revealed{border-left:4px solid var(--pri)}
+.block.locked::after{
+  content:"点击显示";position:absolute;top:6px;right:10px;font-size:11px;color:var(--gray);
+}
+.rbar{
+  display:flex;gap:10px;padding:12px;background:#fff;border-top:1px solid var(--line);
+  padding-bottom:calc(12px + var(--safe));
+}
+.rbar .btn{flex:1;height:48px;font-size:16px;border-radius:12px}
+.rbar .btn.err{background:var(--red)}
+.rbar .btn.ok{background:var(--green)}
+/* ===== 点数徽标 ===== */
+.dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 5px;border-radius:11px;font-size:12px;font-weight:600;
+  background:var(--gray);color:#fff;flex:0 0 auto;
+}
+.dot.l1{background:var(--red)}
+.dot.l2{background:var(--green)}
+.dot.l3{background:var(--amber)}
+/* ===== 模态 ===== */
+.mask{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:none;
+  align-items:flex-end;justify-content:center;
+}
+.mask.show{display:flex}
+.modal{
+  background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:88vh;
+  display:flex;flex-direction:column;animation:up .2s ease;
+}
+@keyframes up{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.modal-h .h-title{flex:1;font-weight:600;font-size:16px}
+.modal-b{padding:16px;overflow:auto}
+.modal-f{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;padding-bottom:calc(12px + var(--safe))}
+.field{margin-bottom:14px}
+.field>label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;background:#fff;color:var(--txt);
+}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6}
+.field .hint-t{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5}
+.field .hint-t code{background:#f0f1f3;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,monospace}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1}
+/* ===== 批量预览 ===== */
+.preview-table{width:100%;border-collapse:collapse;font-size:13px}
+.preview-table th,.preview-table td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;max-width:180px;overflow:hidden}
+.preview-table th{background:#f5f6f8;position:sticky;top:0}
+.preview-table tr.bad{background:#fef2f2}
+.badge{font-size:11px;padding:1px 6px;border-radius:10px;font-weight:600}
+.badge.err{background:#fee2e2;color:var(--red)}
+.badge.ok{background:#dcfce7;color:var(--green)}
+.toast{
+  position:fixed;left:50%;bottom:calc(30px + var(--safe));transform:translateX(-50%);
+  background:rgba(31,35,40,.92);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;z-index:200;
+  max-width:80vw;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.toast.show{opacity:1}
+.batch-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.batch-actions .btn{flex:1;min-width:120px}
+.longpress-tip{font-size:12px;color:var(--sub);margin-bottom:8px}
+.taginput{display:flex;flex-wrap:wrap;gap:6px;padding:6px;border:1px solid var(--line);border-radius:10px;min-height:42px;align-items:center}
+.taginput input{flex:1;border:none;outline:none;min-width:80px;padding:4px}
+.chip{background:#eef2ff;color:var(--pri);padding:3px 8px;border-radius:14px;font-size:13px;display:flex;align-items:center;gap:4px}
+.chip b{color:var(--gray);cursor:pointer;font-weight:400}
+.kv{font-size:13px;color:var(--sub)}
+.kv b{color:var(--txt);font-weight:500}
+.optbox{display:flex;align-items:center;gap:8px;padding:8px 0}
+.optbox input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri)}
+.num2{display:flex;gap:8px;align-items:center}
+.num2 input{width:80px;text-align:center}
+.small{font-size:12px;color:var(--sub)}
+.danger{color:var(--red)}
+.section-title{padding:16px 14px 6px;font-size:13px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="mask" id="mask"></div>
+
 <script>
-const KEY="choubei_v1";
-let db=JSON.parse(localStorage.getItem(KEY)||'{"folders":[]}');
-let state={view:"home",folderId:null,editing:null,study:null,batchMode:false,selectedItems:[]};
+"use strict";
+/* ============================================================
+   抽背助手 —— 单文件离线应用
+   数据全部保存在 localStorage，可导出 / 导入
+   ============================================================ */
+const LS_KEY = 'recall_data_v1';
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild;};
+let TOAST_T;
 
-function save(){localStorage.setItem(KEY,JSON.stringify(db))}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-function folder(){return db.folders.find(x=>x.id===state.folderId)}
-function countClass(n){return n===0?"c0":n<=3?"c1":n<=7?"c2":"c3"}
-
-// 关键：用本地时区日期，避免 toISOString() 的 UTC 时差导致凌晨测试不加分
-function todayStr(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+/* ---------- 持久化 ---------- */
+function loadData(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return seed();
+    const d = JSON.parse(raw);
+    if(!d.folders || !Array.isArray(d.folders)) return seed();
+    return d;
+  }catch(e){ console.warn('读取存档失败，使用空数据',e); return seed(); }
 }
-
-function header(title,back=true){
- return `<div class="top">${back?'<button class="secondary" onclick="goHome()">‹ 返回</button>':''}<h1>${esc(title)}</h1><span></span></div>`
+function seed(){
+  return {
+    folders:[
+      {id:uid(), name:'示例：英语单词', items:[
+        mkItem('apple','苹果','水果'),
+        mkItem('breakfast','早餐','一日三餐'),
+        mkItem('library','图书馆','地点'),
+      ]}
+    ],
+    version:1
+  };
 }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){ toast('保存失败：存储空间可能已满'); } }
+
+let data = loadData();
+if(!data.version){ data.version=1; }
+
+function uid(){ return 'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+function mkItem(q,a,h=''){ return {id:uid(),q,a,h,dot:0,lastCorrect:null}; }
+function todayStr(d=new Date()){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function getFolder(id){ return data.folders.find(f=>f.id===id); }
+function getFolderOf(itemId){
+  for(const f of data.folders){ if(f.items.some(i=>i.id===itemId)) return f; } return null;
+}
+function dotLevel(d){ if(d<=0) return 0; if(d<=3) return 1; if(d<=7) return 2; return 3; }
+
+/* ---------- 路由 ---------- */
+const Route = { page:'home', folderId:null, review:null, previewFolderId:null };
+function go(patch){ Object.assign(Route,patch); render(); }
+
+/* ---------- 通用 UI ---------- */
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(TOAST_T); TOAST_T=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function confirmDlg(title,body,onYes){
+  openModal({
+    title, bodyHtml: typeof body==='string'? `<p>${esc(body)}</p>`:body,
+    actions:[{label:'取消',ghost:true,onClick:closeModal},{label:'确认',danger:true,onClick:()=>{closeModal();onYes();}}]
+  });
+}
+let modalCtx = null;
+function openModal({title,bodyHtml,actions}){
+  const mask=$('#mask');
+  const m=el(`<div class="modal">
+    <div class="modal-h"><span class="h-title"></span>
+      <button class="icon-btn" id="mclose" title="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-b"></div>
+    <div class="modal-f"></div>
+  </div>`);
+  $('.h-title',m).textContent=title;
+  $('.modal-b',m).innerHTML=bodyHtml;
+  const f=$('.modal-f',m);
+  actions.forEach(a=>{
+    const b=el(`<button class="btn ${a.ghost?'ghost':''} ${a.danger?'red':''}"></button>`);
+    b.textContent=a.label; b.onclick=a.onClick; f.appendChild(b);
+  });
+  mask.innerHTML=''; mask.appendChild(m); mask.classList.add('show');
+  $('#mclose').onclick=closeModal;
+  modalCtx=m;
+}
+function closeModal(){ const mask=$('#mask'); mask.classList.remove('show'); mask.innerHTML=''; modalCtx=null; }
+function escClose(e){ if(e.key==='Escape') closeModal(); }
+document.addEventListener('keydown',escClose);
+
+/* ============================================================
+   页面渲染
+   ============================================================ */
 function render(){
- const a=document.getElementById("app");
- if(state.view==="home") a.innerHTML=header("抽背",false)+home();
- if(state.view==="folder") a.innerHTML=header(folder()?.name||"文件夹")+folderView();
- if(state.view==="browse") a.innerHTML=header("浏览")+browse();
- if(state.view==="edit") a.innerHTML=header(state.editing?.id?"编辑内容":"添加内容")+editView();
- if(state.view==="study") a.innerHTML=studyView();
+  const app=$('#app'); app.innerHTML='';
+  if(Route.page==='home') app.appendChild(homePage());
+  else if(Route.page==='folder') app.appendChild(folderPage());
+  else if(Route.page==='review') app.appendChild(reviewPage());
+  window.scrollTo(0,0);
 }
 
-/* ---- 长按批量选择 ---- */
-let longPressTimer=null;
-function startLongPress(id,e){if(state.batchMode)return;longPressTimer=setTimeout(()=>{enterBatchMode(id)},550)}
-function cancelLongPress(){clearTimeout(longPressTimer)}
-function enterBatchMode(firstId){
- state.batchMode=true;state.selectedItems=[firstId];render();
- const first=document.querySelector('[data-item-id="'+firstId+'"] .item-select');
- if(first)first.checked=true;
-}
-function toggleBatchItem(id,checked){
- if(checked){if(!state.selectedItems.includes(id))state.selectedItems.push(id)}
- else{state.selectedItems=state.selectedItems.filter(x=>x!==id)}
-}
-function selectAll(){const f=folder();state.selectedItems=f.items.map(x=>x.id);render()}
-function exitBatchMode(){state.batchMode=false;state.selectedItems=[];render()}
-function batchDelete(){
- const f=folder();
- if(!state.selectedItems.length)return;
- if(confirm(`确定删除选中的 ${state.selectedItems.length} 条内容吗？`)){
-   f.items=f.items.filter(x=>!state.selectedItems.includes(x.id));
-   save();exitBatchMode();render();
- }
-}
-
-function goHome(){state={view:"home",folderId:null,editing:null,study:null,batchMode:false,selectedItems:[]};render()}
-function home(){
- return `<div class="view"><div class="toolbar"><button onclick="newFolder()">＋ 新建文件夹</button><button class="secondary" onclick="importAll()">导入备份</button><button class="secondary" onclick="exportAll()">导出备份</button></div>
- <div class="folders">${db.folders.length?db.folders.map(f=>`<div class="folder"><div onclick="openFolder('${f.id}')" style="flex:1"><strong>${esc(f.name)}</strong><div class="muted">${f.items.length} 条内容</div></div><div class="actions"><button class="secondary" onclick="renameFolder('${f.id}')">重命名</button><button class="danger" onclick="deleteFolder('${f.id}')">删除</button></div></div>`).join(""):'<div class="empty">还没有文件夹。<br>先创建一个吧。</div>'}</div>
- <input id="importfile" class="fileinput" type="file" accept=".json" onchange="doImport(event)">
- </div>`
-}
-function openFolder(id){state.view="folder";state.folderId=id;state.batchMode=false;state.selectedItems=[];render()}
-function folderView(){
- const f=folder(); if(!f)return "";
- const batchBar=state.batchMode?`<div class="batch-bar"><span>已选 ${state.selectedItems.length} 条</span><button class="secondary" onclick="selectAll()">全选</button><button class="danger" onclick="batchDelete()">删除选中</button><button class="secondary" onclick="exitBatchMode()">取消</button></div>`:"";
- return `<div class="view">${batchBar}<div class="toolbar">
- <button onclick="newItem()">＋ 添加</button><button class="secondary" onclick="batch()">批量添加</button>
- <button class="secondary" onclick="browse()">浏览</button><button class="good" onclick="startStudy()">开始抽背</button>
- </div>
- <div class="muted" style="margin-bottom:12px">${f.items.length} 条内容（长按条目可批量选择）</div>
- ${f.items.length?f.items.map((it)=>`<div class="item ${state.batchMode?'batch-mode':''}" data-item-id="${it.id}" oncontextmenu="return false" onmousedown="startLongPress('${it.id}',event)" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('${it.id}',event)" ontouchend="cancelLongPress()" ontouchcancel="cancelLongPress()">
- <input class="item-select" type="checkbox" ${state.selectedItems.includes(it.id)?'checked':''} onclick="event.stopPropagation();toggleBatchItem('${it.id}',this.checked)">
- <div style="flex:1" onclick="${state.batchMode?'event.stopPropagation();this.previousElementSibling.click()':"preview('"+it.id+"')"}">${esc(it.question)}</div><div class="actions"><span class="count ${countClass(it.correctCount)}">${it.correctCount}</span><button class="secondary" onclick="event.stopPropagation();editItem('${it.id}')">编辑</button></div></div>`).join(""):'<div class="empty">这个文件夹还没有内容。</div>'}</div>`
-}
-function browse(){state.view="browse";render()}
-function browse(){
- const f=folder();
- return `<div class="view"><div class="toolbar"><button class="secondary" onclick="openFolder('${f.id}')">返回列表</button></div>
- ${f.items.length?f.items.map(it=>`<div class="item" onclick="preview('${it.id}')"><div style="flex:1">${esc(it.question)}</div><div class="count ${countClass(it.correctCount)}">${it.correctCount}</div></div>`).join(""):'<div class="empty">没有内容。</div>'}</div>`
-}
-function newFolder(){
- const name=prompt("文件夹名称"); if(!name?.trim())return;
- db.folders.push({id:uid(),name:name.trim(),items:[],createdAt:Date.now()});save();render()
-}
-function renameFolder(id){
- const f=db.folders.find(x=>x.id===id), name=prompt("新名称",f.name);
- if(name?.trim()){f.name=name.trim();save();render()}
-}
-function deleteFolder(id){
- const f=db.folders.find(x=>x.id===id);
- if(confirm(`确定删除"${f.name}"及其中全部内容吗？`)){db.folders=db.folders.filter(x=>x.id!==id);save();render()}
-}
-function editView(){
- const x=state.editing||{question:"",answer:"",hint:""};
- return `<div class="view"><div class="card">
- <div class="field"><label>问题 *</label><textarea id="q">${esc(x.question)}</textarea></div>
- <div class="field"><label>答案 *</label><textarea id="a">${esc(x.answer)}</textarea></div>
- <div class="field"><label>提示（可选）</label><textarea id="h">${esc(x.hint)}</textarea></div>
- <div class="actions"><button onclick="saveItem()">保存</button>${x.id?'<button class="danger" onclick="deleteItem()">删除</button>':''}<button class="secondary" onclick="openFolder(\''+folder().id+'\')">取消</button></div>
- </div></div>`
-}
-function newItem(){state.view="edit";state.editing=null;render()}
-function editItem(id){state.view="edit";state.editing=folder().items.find(x=>x.id===id);render()}
-function saveItem(){
- const q=document.getElementById("q").value.trim(),a=document.getElementById("a").value.trim(),h=document.getElementById("h").value.trim();
- if(!q||!a)return alert("问题和答案不能为空。");
- const f=folder();
- if(state.editing){Object.assign(state.editing,{question:q,answer:a,hint:h,updatedAt:Date.now()})}
- else f.items.push({id:uid(),question:q,answer:a,hint:h,correctCount:0,lastCorrectDate:null,createdAt:Date.now(),updatedAt:Date.now()});
- save();openFolder(f.id)
-}
-function deleteItem(){
- if(confirm("确定删除这条内容吗？")){const f=folder();f.items=f.items.filter(x=>x.id!==state.editing.id);save();openFolder(f.id)}
-}
-function preview(id){
- const it=folder().items.find(x=>x.id===id);
- showModal(`<h2 style="margin-top:0">${esc(it.question)}</h2><div class="hint"><b>提示</b><br>${it.hint?esc(it.hint):'<span class="muted">无提示</span>'}</div><div class="answer"><b>答案</b><br>${esc(it.answer)}</div><div class="muted">累计正确次数：${it.correctCount}<br>最后正确日期：${it.lastCorrectDate||'从未'}</div><p class="muted" style="font-size:12px;text-align:center;margin-top:20px">点击任意位置关闭</p>`)
-}
-function showModal(body){const d=document.createElement("div");d.className="modal";d.id="modal";d.innerHTML='<div class="modalbox" onclick="closeModal()">'+body+'</div>';document.body.appendChild(d)}
-function closeModal(){document.getElementById("modal")?.remove()}
-function batch(){
- showModal(`<button class="close" onclick="closeModal()">关闭</button><h2>批量添加</h2>
- <p class="muted">先定义每行的格式。例如：<b>[题目]/[答案]/[提示]</b></p>
- <div class="field"><label>导入格式</label><input id="formattext" value="[题目]/[答案]/[提示]"></div>
- <div class="field"><label>要导入的文本</label><textarea id="batchtext" style="min-height:190px" placeholder="问题1/答案1/提示1&#10;问题2/答案2/&#10;问题3/答案3/提示3"></textarea></div>
- <div id="formatmsg" class="muted" style="margin-bottom:10px"></div>
- <div class="actions"><button onclick="parseBatch()">预览</button></div>`)
-}
-function parseFormat(fmt){
- const re=/\[(题目|问题|答案|提示)\]/g;
- let fields=[],parts=[],last=0,m;
- while((m=re.exec(fmt))){
-   if(m.index>last)parts.push({type:"sep",value:fmt.slice(last,m.index)});
-   fields.push(m[1]==="问题"?"题目":m[1]);
-   parts.push({type:"field",value:fields[fields.length-1]});
-   last=re.lastIndex;
- }
- if(last<fmt.length)parts.push({type:"sep",value:fmt.slice(last)});
- if(!fields.includes("题目")||!fields.includes("答案"))return {error:"格式至少需要包含 [题目] 和 [答案]。"};
- if(new Set(fields).size!==fields.length)return {error:"同一个要素不能重复。"};
- const seps=parts.filter(x=>x.type==="sep").map(x=>x.value).filter(Boolean);
- if(seps.length===0)return {error:"各要素之间没有分隔符，无法可靠判断边界。"};
- if(seps.some(x=>x.includes("[")||x.includes("]")))return {error:"分隔符中不能包含方括号。"};
- return {parts,fields,seps};
-}
-function parseLine(line,info){
- let pattern="^", groups=[];
- for(const p of info.parts){
-   if(p.type==="field"){groups.push(p.value);pattern+="(.*?)"}
-   else pattern+=escapeRegExp(p.value);
- }
- pattern+="$";
- const m=line.match(new RegExp(pattern));
- if(!m)return null;
- const vals={题目:"",答案:"",提示:""};
- groups.forEach((g,i)=>vals[g]=m[i+1]||"");
- return vals;
-}
-function escapeRegExp(x){return x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
-function parseBatch(){
- const fmt=document.getElementById("formattext").value.trim();
- const info=parseFormat(fmt);
- const msg=document.getElementById("formatmsg");
- if(info.error){msg.innerHTML='<span style="color:#d33">'+esc(info.error)+'</span>';return}
- const lines=document.getElementById("batchtext").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- if(!lines.length){msg.textContent="请先输入要导入的文本。";return}
- const rows=lines.map(line=>parseLine(line,info));
- const bad=rows.map((r,i)=>r?null:i+1).filter(Boolean);
- if(bad.length){msg.innerHTML='<span style="color:#d33">第 '+bad.join("、")+' 行无法解析。</span>';return}
- const preview=rows.map((r,i)=>`<div class="card"><b>${i+1}. ${esc(r.题目)}</b><div class="muted" style="margin-top:6px">答案：${esc(r.答案)}${r.提示?`　提示：${esc(r.提示)}`:""}</div></div>`).join("");
- msg.innerHTML='<b style="color:#25864a">解析成功，共 '+rows.length+' 条。</b>';
- const box=document.querySelector("#modal .modalbox");
- box.innerHTML=`<button class="close" onclick="closeModal()">关闭</button><h2>导入预览</h2><p class="muted">格式：${esc(fmt)}</p>${preview}<div class="actions"><button onclick='confirmBatchImport(${JSON.stringify(rows)})'>确认添加 ${rows.length} 条</button><button class="secondary" onclick="batch()">返回修改</button></div>`;
-}
-function confirmBatchImport(rows){
- const f=folder();
- rows.forEach(r=>f.items.push({id:uid(),question:r.题目.trim(),answer:r.答案.trim(),hint:r.提示.trim(),correctCount:0,lastCorrectDate:null,createdAt:Date.now(),updatedAt:Date.now()}));
- save();closeModal();render()
+/* ---------- 首页：文件夹列表 ---------- */
+function homePage(){
+  const root=el('<div></div>');
+  root.appendChild(topBar('抽背助手',[
+    {icon:exportIcon(),title:'导出数据',onClick:exportData},
+    {icon:importIcon(),title:'导入数据',onClick:importData},
+  ]));
+  const wrap=el('<div class="folder-grid"></div>');
+  data.folders.forEach(f=>{
+    const total=f.items.length;
+    const card=el(`<div class="folder-card" tabindex="0">
+      <div class="folder-actions">
+        <button title="重命名">${editIcon()}</button>
+        <button title="删除">${trashIcon()}</button>
+      </div>
+      <div class="fn"></div><div class="fc"></div>
+    </div>`);
+    $('.fn',card).textContent=f.name;
+    $('.fc',card).textContent=`${total} 条内容`;
+    card.onclick=()=>go({page:'folder',folderId:f.id});
+    card.onkeydown=e=>{if(e.key==='Enter')card.click();};
+    $('.folder-actions button:first-child',card).onclick=e=>{e.stopPropagation();renameFolder(f);};
+    $('.folder-actions button:last-child',card).onclick=e=>{e.stopPropagation();deleteFolder(f);};
+    wrap.appendChild(card);
+  });
+  root.appendChild(wrap);
+  const addBtn=el('<div class="page"><button class="btn" style="width:100%">＋ 新建文件夹</button></div>');
+  $('button',addBtn).onclick=createFolder;
+  root.appendChild(addBtn);
+  if(data.folders.length===0){
+    root.appendChild(el(`<div class="empty">还没有文件夹，先新建一个吧</div>`));
+  }
+  return root;
 }
 
-function startStudy(){
- const f=folder(); if(!f.items.length)return alert("这个文件夹没有内容。");
- showModal(`<button class="close" onclick="closeModal()">关闭</button><h2>开始抽背</h2>
- <div class="field"><label>数量</label><input id="num" type="number" min="1" max="${f.items.length}" value="${Math.min(10,f.items.length)}"></div>
- <div class="field"><label>顺序</label><select id="order"><option value="shuffle">乱序</option><option value="normal">正序</option></select></div>
- <div class="field"><label><input type="checkbox" id="reverse"> 题目与答案反转</label></div>
- <div class="field"><label><input type="checkbox" id="limitSkill"> 限定熟练度</label>
- <div style="display:flex;gap:6px;align-items:center;margin-top:4px"><input id="minCount" type="number" min="0" placeholder="最小" style="width:80px"> ~ <input id="maxCount" type="number" min="0" placeholder="最大" style="width:80px"></div></div>
- <button onclick="beginStudy()">开始</button>`)
+/* ---------- 文件夹页 ---------- */
+let selMode=false, selSet=new Set();
+function folderPage(){
+  const f=getFolder(Route.folderId);
+  if(!f) return el('<div class="empty">文件夹不存在</div>');
+  const root=el('<div></div>');
+  root.appendChild(topBar(f.name,[
+    {icon:backIcon(),title:'返回',onClick:()=>{selMode=false;selSet.clear();go({page:'home'});}},
+  ], selMode ? `${selSet.size} 项已选` : null));
+
+  // 操作条
+  const bar=el('<div class="page" style="padding-top:6px"></div>');
+  const actions=el('<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>');
+  const bAdd=el('<button class="btn ghost sm" style="flex:1;min-width:88px">＋ 单条添加</button>'); bAdd.onclick=()=>addItem(f);
+  const bBatch=el('<button class="btn ghost sm" style="flex:1;min-width:88px">＋ 批量添加</button>'); bBatch.onclick=()=>batchAdd(f);
+  const bRev=el('<button class="btn sm" style="flex:1;min-width:88px">▶ 开始抽背</button>'); bRev.onclick=()=>startReview(f);
+  actions.append(bAdd,bBatch,bRev);
+  bar.appendChild(actions);
+  if(selMode){
+    const sb=el('<div style="display:flex;gap:8px"></div>');
+    const bDel=el('<button class="btn red sm">删除所选</button>');
+    bDel.onclick=()=>deleteSelected(f);
+    const bCan=el('<button class="btn ghost sm">取消选择</button>');
+    bCan.onclick=()=>{selMode=false;selSet.clear();render();};
+    sb.append(bDel,bCan); bar.appendChild(sb);
+  }
+  root.appendChild(bar);
+  root.appendChild(el(`<div class="longpress-tip" style="padding:0 12px 6px">点击题目进入编辑，点击右侧数字查看提示与答案；长按条目进入批量选择。</div>`));
+
+
+  const list=el('<div class="card"></div>');
+  if(f.items.length===0){
+    list.appendChild(el(`<div class="empty">这个文件夹还是空的，添加一些背诵内容吧</div>`));
+  }
+  f.items.forEach(it=>{
+    const row=el(`<div class="list-item">
+      <div class="checkbox"></div>
+      <div class="body click-edit">
+        <div class="name"></div>
+        <div class="meta"></div>
+      </div>
+      <div class="dot click-reveal"></div>
+    </div>`);
+    $('.name',row).textContent=it.q || '（空问题）';
+    $('.meta',row).textContent=it.lastCorrect? `上次复习：${it.lastCorrect}` : '尚未复习过';
+    $('.dot',row).textContent=it.dot;
+    $('.dot',row).className='dot click-reveal '+['','l1','l2','l3'][dotLevel(it.dot)];
+    const cb=$('.checkbox',row);
+    if(selMode){ cb.classList.toggle('on',selSet.has(it.id)); }
+    // 展开/收起详情（仅正常模式下）
+    if(!selMode && it._open){
+      const det=el(`<div class="item-detail">
+        ${it.h?`<div class="kv"><b>提示：</b><span></span></div>`:''}
+        <div class="kv"><b>答案：</b><span></span></div>
+        <div class="kv"><b>正确次数：</b><span>${it.dot}</span></div>
+      </div>`);
+      if(it.h){$('.item-detail .kv:first-child span',det).textContent=it.h;}
+      $('.item-detail .kv:last-child span',det).textContent=it.dot;
+      $('.item-detail .kv:nth-of-type(2) span',det).textContent=it.a;
+      row.appendChild(det);
+    }
+    // 长按
+    let timer=null, fired=false;
+    const start=()=>{fired=false;timer=setTimeout(()=>{fired=true;enterSel(it.id);},520);};
+    const cancel=()=>{clearTimeout(timer);};
+    row.addEventListener('mousedown',start); row.addEventListener('touchstart',start,{passive:true});
+    row.addEventListener('mouseup',cancel); row.addEventListener('mouseleave',cancel); row.addEventListener('touchend',cancel);
+    row.addEventListener('touchmove',cancel,{passive:true});
+    // 题目区点击 → 编辑
+    $('.click-edit',row).onclick=e=>{e.stopPropagation();if(selMode||fired)return;editItem(f,it);};
+    // 数字区点击 → 展开/收起提示与答案
+    $('.click-reveal',row).onclick=e=>{e.stopPropagation();if(selMode||fired)return;it._open=!it._open;render();};
+    // 行点击：数字区优先，其余走题目区
+    row.onclick=()=>{
+      if(selMode){ if(selSet.has(it.id))selSet.delete(it.id); else selSet.add(it.id);
+        if(selSet.size===0){selMode=false;}
+        render(); return;
+      }
+      if(fired) return;
+      editItem(f,it);
+    };
+    list.appendChild(row);
+  });
+  root.appendChild(list);
+  return root;
 }
-function beginStudy(){
- const f=folder();
- let arr=[...f.items];
- const reverse=document.getElementById("reverse")?.checked||false;
- const limitSkill=document.getElementById("limitSkill")?.checked||false;
- if(limitSkill){
-   const min=parseInt(document.getElementById("minCount").value)||0;
-   const max=parseInt(document.getElementById("maxCount").value)||9999;
-   arr=arr.filter(x=>x.correctCount>=min&&x.correctCount<=max);
- }
- if(!arr.length)return alert("没有符合该熟练度范围的内容。");
- const n=Math.max(1,Math.min(arr.length,parseInt(document.getElementById("num").value)||1));
- if(document.getElementById("order").value==="shuffle")arr.sort(()=>Math.random()-.5);
- arr=arr.slice(0,n);
- state.view="study";state.study={queue:arr,index:0,phase:"q",wrong:[],review:false,reverse};closeModal();render()
+function enterSel(id){
+  selMode=true; selSet.add(id); render();
+  toast('已进入批量选择模式（点击条目增减选择）');
 }
-function studyView(){
- const s=state.study,it=s.queue[s.index];
- if(!it)return finishStudy();
- const qText=s.reverse?it.answer:it.question;
- const aText=s.reverse?it.question:it.answer;
- const hText=it.hint;
- return `<div class="study">${header(s.review?"错误回顾":"抽背"+(s.reverse?" · 反转":""),false)}
- <div class="studybox">${esc(qText)}</div>
- <div class="studybox studyhint" onclick="revealHint()" style="cursor:pointer" title="点击显示提示">${s.phase!=="q"?esc(hText)||'<span class="muted">无提示</span>':`<span class="muted">${hText?'点击显示提示':'无提示'}</span>`}</div>
- <div class="studybox studyanswer" onclick="revealAnswer()" style="cursor:pointer" title="点击显示答案">${s.phase==="a"?esc(aText):'<span class="muted">点击显示答案</span>'}</div>
- <div><div class="progress">${s.index+1} / ${s.queue.length}${s.review?" · 错题回顾":""}</div><div class="studybuttons" style="margin-top:10px"><button class="good" onclick="markCorrect()">正确</button><button class="danger" onclick="markWrong()">错误 ✕</button></div></div>
- </div>`
+function deleteSelected(f){
+  if(selSet.size===0){selMode=false;render();return;}
+  confirmDlg('删除所选内容',`确定删除选中的 ${selSet.size} 条内容吗？此操作不可撤销。`,()=>{
+    f.items=f.items.filter(i=>!selSet.has(i.id));
+    selSet.clear();selMode=false;save();render();toast('已删除');
+  });
 }
-function revealHint(){ if(state.study.phase==="q") state.study.phase="h"; render(); }
-function revealAnswer(){ state.study.phase="a"; render(); }
-function markCorrect(){
- const s=state.study,it=s.queue[s.index];
- const today=todayStr();
- if(it.lastCorrectDate!==today){it.correctCount++;it.lastCorrectDate=today;save()}
- if(s.review)s.queue.splice(s.index,1); else s.index++;
- if(s.review){if(s.index>=s.queue.length)return finishStudy();}else if(s.index>=s.queue.length)return finishStudy();
- s.phase="q";render()
+
+/* ---------- 抽背页 ---------- */
+function startReview(folder){
+  const f=getFolder(folder.id);
+  if(!f||f.items.length===0){toast('文件夹为空，无法抽背');return;}
+  openModal({
+    title:'抽背设置',
+    bodyHtml: reviewSetupHtml(f),
+    actions:[{label:'取消',ghost:true,onClick:closeModal},{label:'开始抽背',onClick:()=>doStart(f)}]
+  });
+  bindSetup(f);
 }
-function markWrong(){
- const s=state.study,it=s.queue[s.index];
- if(!s.wrong.includes(it.id))s.wrong.push(it.id);
- s.index++;s.phase="q";
- if(s.index>=s.queue.length){
-   if(s.review){
-     const remaining=folder().items.filter(x=>s.wrong.includes(x.id));
-     if(remaining.length){s.queue=remaining;s.index=0;s.phase="q";render();}
-     else finishStudy();
-   }else finishStudy();
- }else render()
+function reviewSetupHtml(f){
+  return `
+  <div class="field">
+    <label>抽背数量</label>
+    <input type="number" id="st_count" min="1" value="${f.items.length}">
+    <div class="hint-t">文件夹共 <b>${f.items.length}</b> 条，可填更大数值以循环覆盖。</div>
+  </div>
+  <div class="field">
+    <label>顺序</label>
+    <select id="st_order">
+      <option value="seq">正序</option>
+      <option value="rand">乱序</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="optbox"><input type="checkbox" id="st_rev"> 反转题目和答案（中外↔外中）</label>
+  </div>
+  <div class="field">
+    <label class="optbox"><input type="checkbox" id="st_limit"> 限定熟练度（正确次数范围）</label>
+    <div class="num2" style="margin-top:6px">
+      <input type="number" id="st_min" value="0" min="0"><span>至</span>
+      <input type="number" id="st_max" value="999" min="0">
+    </div>
+  </div>`;
 }
-function finishStudy(){
- const s=state.study;
- if(!s.review && s.wrong.length){
-   showModal(`<h2>本次复习完成</h2><p>本次共 ${s.queue.length} 条，错误 ${s.wrong.length} 条。</p><div class="actions"><button onclick="reviewWrong()">回顾错误</button><button class="secondary" onclick="closeStudy()">结束</button></div>`);
- }else if(s.review){
-   showModal(`<h2>错误回顾完成</h2><p>本轮错误内容已经全部答对。</p><button onclick="closeStudy()">结束</button>`)
- }else{
-   showModal(`<h2>本次复习完成</h2><p>本轮内容已经全部完成。</p><button onclick="closeStudy()">结束</button>`)
- }
+function bindSetup(f){
+  const cnt=$('#st_count'), min=$('#st_min'),max=$('#st_max');
+  // 熟练度范围只在勾选时启用
+  const lim=$('#st_limit');
+  const toggle=()=>{min.disabled=max.disabled=!lim.checked;};
+  lim.onchange=toggle; toggle();
 }
-function reviewWrong(){
- const s=state.study,items=folder().items.filter(x=>s.wrong.includes(x.id));
- s.queue=items;s.index=0;s.phase="q";s.review=true;closeModal();render()
+function doStart(f){
+  const cfg={count:1,order:'seq',reverse:false,limit:false,min:0,max:0};
+  cfg.count=Math.max(1,parseInt($('#st_count').value||'1')||1);
+  cfg.order=$('#st_order').value;
+  cfg.reverse=$('#st_rev').checked;
+  cfg.limit=$('#st_limit').checked;
+  cfg.min=Math.max(0,parseInt($('#st_min').value||'0')||0);
+  cfg.max=Math.max(cfg.min,parseInt($('#st_max').value||'0')||0);
+  let pool=f.items.filter(i=>!cfg.limit || (i.dot>=cfg.min && i.dot<=cfg.max));
+  if(pool.length===0){toast('当前条件下没有可选内容');return;}
+  let queue=[];
+  if(cfg.order==='rand' && cfg.count<pool.length){
+    // 随机抽取不重复，数量不足则复用全部
+    const idx=[...pool.keys()]; shuffle(idx);
+    queue=idx.slice(0,cfg.count).map(i=>pool[i]);
+  }else{
+    queue=cfg.count<=pool.length ? pool.slice() : (function(){
+      const q=[]; const idx=[...pool.keys()]; shuffle(idx);
+      while(q.length<cfg.count){ shuffle(idx); for(const i of idx){ q.push(pool[i]); if(q.length>=cfg.count)break; } }
+      return q;
+    })();
+    if(cfg.order==='rand') shuffle(queue);
+  }
+  Route.review={
+    folderId:f.id,name:f.name,queue,idx:0,reverse:cfg.reverse,
+    wrong:[],done:false,reviewingWrong:false
+  };
+  closeModal();
+  go({page:'review'});
 }
-function closeStudy(){closeModal();state.view="folder";state.study=null;render()}
-function exportAll(){
- const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download="抽背备份.json";a.click();URL.revokeObjectURL(url)
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;}
+
+function reviewPage(){
+  const st=Route.review;
+  if(!st) return el('<div class="empty">会话已结束</div>');
+  const f=getFolder(st.folderId);
+  const it=st.queue[st.idx];
+  const root=el('<div class="review"></div>');
+  // 顶部栏：进度
+  const bar=topBarSimple(`
+    <span class="kv"><b>${st.idx+1}</b>/${st.queue.length}</span>
+    ${st.reverse?'<span class="badge ok">反转</span>':''}
+    ${st.reviewingWrong?'<span class="badge err">错题回顾</span>':''}
+  `,[{icon:closeXIcon(),title:'退出',onClick:()=>{
+    confirmDlg('退出抽背','确定要结束本次抽背吗？',()=>{Route.review=null;go({page:'folder',folderId:st.folderId});});
+  }}]);
+  root.appendChild(bar);
+  if(!it){ root.appendChild(el('<div class="empty">本次抽背已完成！</div>')); return root; }
+  const showQ=st.reverse? it.a : it.q;
+  const showH=st.reverse? it.h : it.h;
+  const showA=st.reverse? it.q : it.a;
+  root.appendChild(makeBlock('q','题目',showQ,true));
+  root.appendChild(makeBlock('h','提示',showH||'（无提示）',st.revH));
+  root.appendChild(makeBlock('a','答案',showA,st.revA));
+  function makeBlock(kind,label,txt,revealed){
+    const key='rev'+kind.toUpperCase()[0]+kind.slice(1);
+    const b=el(`<div class="block ${kind} ${revealed?'revealed':'locked'}"></div>`);
+    if(!revealed){
+      b.innerHTML=`<div><div class="placeholder">点击显示${label}</div></div>`;
+      b.onclick=()=>{ st[key]=true; render(); };
+    }else{
+      b.innerHTML=`<div><div class="bcc">${label}</div><div class="bc"></div></div>`;
+      $('.bc',b).textContent=txt;
+    }
+    return b;
+  }
+  // 判定按钮
+  const rb=el('<div class="rbar"></div>');
+  const err=el('<button class="btn err">✗ 错误</button>');
+  const ok=el('<button class="btn ok">✓ 正确</button>');
+  err.onclick=()=>mark(false); ok.onclick=()=>mark(true);
+  rb.append(err,ok); root.appendChild(rb);
+  return root;
+
+  function mark(correct){
+    const st2=Route.review;
+    const it2=st2.queue[st2.idx];
+    if(correct){
+      award(it2);
+      toast('标记正确 +1');
+    }else{
+      if(!st2.wrong.includes(it2.id)) st2.wrong.push(it2.id);
+      toast('已加入错题');
+    }
+    // 进入下一条
+    st2.idx++;
+    st2.revQ=st2.revH=st2.revA=false;
+    if(st2.idx>=st2.queue.length){ finishRound(); }
+    save(); render();
+  }
 }
-function importAll(){document.getElementById("importfile").click()}
-function doImport(e){
- const file=e.target.files[0];if(!file)return;
- const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.folders))throw 0;db=x;save();render();alert("导入成功。")}catch{alert("导入失败：文件格式不正确。")}};r.readAsText(file);e.target.value=""
+function award(it){
+  const t=todayStr();
+  if(it.lastCorrect!==t){ it.dot++; it.lastCorrect=t; }
 }
+function finishRound(){
+  const st=Route.review;
+  st.done=true;
+  save();
+  // 收集错题对象
+  const f=getFolder(st.folderId);
+  const wrongItems=st.wrong.map(id=>f.items.find(i=>i.id===id)).filter(Boolean);
+  if(wrongItems.length===0){
+    openModal({
+      title:'本轮完成 🎉',
+      bodyHtml:`<p>全部答对！这一轮没有错题。</p>`,
+      actions:[{label:'返回',onClick:()=>{closeModal();Route.review=null;go({page:'folder',folderId:st.folderId});}}]
+    });
+    return;
+  }
+  // 错题回顾选项
+  openModal({
+    title:`本轮完成（${wrongItems.length} 题答错）`,
+    bodyHtml:`<p>是否进入错题回顾？答错的题目将重新抽背，直到全部答对为止。</p>
+      <div class="section-title">错题列表</div>
+      <div class="card" id="wrong_list"></div>`,
+    actions:[
+      {label:'跳过',ghost:true,onClick:()=>{closeModal();Route.review=null;go({page:'folder',folderId:st.folderId});}},
+      {label:'开始回顾错题',onClick:()=>{closeModal();startWrongReview(wrongItems);}}
+    ]
+  });
+  const wl=$('#wrong_list');
+  wrongItems.forEach(i=>{
+    const r=el('<div class="list-item"><div class="body"><div class="name"></div></div></div>');
+    $('.name',r).textContent= i.q;
+    wl.appendChild(r);
+  });
+}
+function startWrongReview(items){
+  const st=Route.review;
+  // 打乱
+  const q=items.slice(); shuffle(q);
+  st.queue=q; st.idx=0; st.wrong=[]; st.reviewingWrong=true;
+  st.revQ=st.revH=st.revA=false;
+  render();
+}
+
+/* ---------- 预览页 ---------- */
+let prevReveal=new Set();
+function previewPage(){
+  const f=getFolder(Route.previewFolderId);
+  if(!f) return el('<div class="empty">文件夹不存在</div>');
+  const root=el('<div></div>');
+  root.appendChild(topBar('预览：'+f.name,[
+    {icon:backIcon(),title:'返回',onClick:()=>{prevReveal.clear();go({page:'folder',folderId:f.id});}},
+  ], `${f.items.length} 条`));
+  if(f.items.length===0){ root.appendChild(el('<div class="empty">没有内容</div>')); return root; }
+  const list=el('<div class="card"></div>');
+  f.items.forEach((it,ix)=>{
+    const open=prevReveal.has(it.id);
+    const row=el(`<div class="list-item" style="flex-wrap:wrap">
+      <div class="body" style="flex:1 1 100%;display:flex;align-items:center;gap:8px">
+        <span style="color:var(--sub);font-size:13px">${ix+1}.</span>
+        <span style="flex:1"></span>
+        <span class="dot ${['','l1','l2','l3'][dotLevel(it.dot)]}">${it.dot}</span>
+      </div>
+      <div style="flex:1 1 100%;padding:8px 0;display:${open?'block':'none'}">
+        ${it.h?`<div class="kv"><b>提示：</b>${esc(it.h)}</div>`:''}
+        <div class="kv" style="margin-top:6px"><b>答案：</b>${esc(it.a)}</div>
+      </div>
+      <div style="flex:1 1 100%;display:flex;align-items:center;gap:8px;padding-top:2px">
+        <span class="preview-meta" style="flex:1;font-size:12px;color:var(--sub)"></span>
+      </div>
+    </div>`);
+    $('.body>span.flex-1',row).textContent=it.q;
+    $('.preview-meta',row).textContent=it.lastCorrect? `上次复习：${it.lastCorrect}`:'尚未复习过';
+    row.onclick=()=>{ if(open)prevReveal.delete(it.id); else prevReveal.add(it.id); render(); };
+    list.appendChild(row);
+  });
+  root.appendChild(list);
+  return root;
+}
+
+/* ============================================================
+   文件夹 CRUD
+   ============================================================ */
+function createFolder(){
+  promptModal('新建文件夹','文件夹名称',{value:'',placeholder:'例如：考研单词'},name=>{
+    name=(name||'').trim(); if(!name) return toast('名称不能为空');
+    data.folders.push({id:uid(),name,items:[]}); save(); render(); toast('已创建');
+  });
+}
+function renameFolder(f){
+  promptModal('重命名文件夹','文件夹名称',{value:f.name},name=>{
+    name=(name||'').trim(); if(!name) return toast('名称不能为空');
+    f.name=name; save(); render();
+  });
+}
+function deleteFolder(f){
+  confirmDlg('删除文件夹',`确定删除文件夹「${f.name}」吗？其中的 ${f.items.length} 条内容将一并删除。`,()=>{
+    data.folders=data.folders.filter(x=>x.id!==f.id); save(); render(); toast('已删除');
+  });
+}
+
+/* ============================================================
+   条目 CRUD / 编辑
+   ============================================================ */
+function addItem(f){
+  itemEditor({title:'添加背诵内容',folder:f,item:mkItem('','','')},it=>{
+    if(!it.q.trim()&&!it.a.trim()) return toast('问题和答案不能同时为空');
+    f.items.push(it); save(); render(); toast('已添加');
+  });
+}
+function editItem(f,it){
+  itemEditor({title:'编辑背诵内容',folder:f,item:{...it},editing:it},res=>{
+    if(res.del){
+      confirmDlg('删除内容',`确定删除「${it.q.slice(0,20)}」吗？`,()=>{
+        f.items=f.items.filter(x=>x.id!==it.id); save(); render(); toast('已删除');
+      });
+      return;
+    }
+    if(!res.item.q.trim()&&!res.item.a.trim()) return toast('问题和答案不能同时为空');
+    Object.assign(it,res.item); save(); render(); toast('已保存');
+  });
+}
+function itemEditor({title,folder,item,editing},cb){
+  openModal({
+    title,
+    bodyHtml:`
+    <div class="field"><label>问题</label><textarea id="ie_q" rows="2" placeholder="必填"></textarea></div>
+    <div class="field"><label>答案</label><textarea id="ie_a" rows="3" placeholder="必填"></textarea></div>
+    <div class="field"><label>提示（可选）</label><textarea id="ie_h" rows="2" placeholder="留空表示没有提示"></textarea>
+      <div class="hint-t">抽背时提示会显示在中间块，点击后才会展示。</div></div>
+    <div class="field"><label>正确次数（可手动修改）</label><input type="number" id="ie_dot" min="0" value="0"></div>`,
+    actions:[
+      ...(editing?[ {label:'删除',danger:true,onClick:()=>cb({del:true})} ]:[]),
+      {label:'取消',ghost:true,onClick:closeModal},
+      {label:editing?'保存':'添加',onClick:()=>{
+        const q=$('#ie_q').value.trim(), a=$('#ie_a').value.trim(), h=$('#ie_h').value.trim();
+        const dot=Math.max(0,parseInt($('#ie_dot').value||'0')||0);
+        cb({item:{...item,q,a,h,dot}});
+      }},
+    ]
+  });
+  // 填充初始值（避免 textarea 内 & 被二次转义）
+  $('#ie_q').value=item.q; $('#ie_a').value=item.a; $('#ie_h').value=item.h; $('#ie_dot').value=item.dot;
+}
+
+/* ============================================================
+   批量添加
+   ============================================================ */
+function batchAdd(f){
+  openModal({
+    title:'批量添加',
+    bodyHtml:`
+    <div class="field"><label>自定义格式</label>
+      <input type="text" id="bf_fmt" value="[问题]/[答案]/[提示]">
+      <div class="hint-t">用 <code>/</code>（半角斜线）分隔各要素，用半角中括号 <code>[</code> <code>]</code> 标示要素位置。提示可选：例如 <code>[问题]/[答案]</code> 表示每行两条。</div>
+    </div>
+    <div class="field"><label>待解析文本（每行一条）</label>
+      <textarea id="bf_txt" rows="8" placeholder="苹果/[apple]/fruit
+早餐/[breakfast]"></textarea>
+    </div>
+    <div class="field"><label class="optbox"><input type="checkbox" id="bf_skip" checked> 解析失败时跳过该行（不勾选则整批取消）</label></div>`,
+    actions:[
+      {label:'取消',ghost:true,onClick:closeModal},
+      {label:'解析并预览',onClick:()=>parseBatch(f)},
+    ]
+  });
+}
+function parseBatch(f){
+  const fmt=$('#bf_fmt').value;
+  const txt=$('#bf_txt').value;
+  const skip=$('#bf_skip').checked;
+  // 构建正则：把 [问题] [答案] [提示] 替换为捕获组，分隔符 / 转义
+  const esc=(c)=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  // 槽位顺序
+  const order=[];
+  const slots=[...fmt.matchAll(/\[问题\]|\[答案\]|\[提示\]/g)].map(m=>m[0]);
+  slots.forEach(sl=>order.push(sl==='[问题]'?'q':sl==='[答案]'?'a':'h'));
+  if(order.length===0){ toast('格式中至少需要包含 [问题] 与 [答案]'); return; }
+  if(!order.includes('q')||!order.includes('a')){ toast('格式中必须包含 [问题] 与 [答案]'); return; }
+  // 按槽位切分格式，得到槽位之间的分隔符片段（已转义）
+  // 容错解析：以“分隔符片段”切分整行，再按槽位顺序映射（提示段允许缺失）
+  const esc2=(c)=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const delimTokens=fmt.split(/\[问题\]|\[答案\]|\[提示\]/).map(s=>[...s].map(esc2).join(''));
+  const splitRe=new RegExp(delimTokens.filter(t=>t.length).map(t=>t.replace(/\\\//g,'\\/')).join('|')||'(?!x)x');
+  const parts=txt.split(/\r?\n/);
+  const rows=[];
+  const errors=[];
+  for(let i=0;i<parts.length;i++){
+    const line=parts[i].trim();
+    if(!line) continue;
+    let segs=line.split(splitRe).map(s=>s.trim());
+    // 去除首尾空段
+    while(segs.length&&segs[0]==='') segs.shift();
+    while(segs.length&&segs[segs.length-1]==='') segs.pop();
+    if(segs.length<order.length){ errors.push({n:i+1,line,reason:`需要 ${order.length} 段，实际得到 ${segs.length} 段`}); continue; }
+    // 内容中含分隔符时，多出的段拼回末槽位
+    const obj={q:'',a:'',h:''};
+    if(segs.length>order.length){
+      const glue=(delimTokens.find(t=>t.length)||'/').replace(/\\(.)/g,'$1');
+      obj[order[order.length-1]]=segs.slice(order.length-1).join(glue).trim();
+      for(let k=0;k<order.length-1;k++) obj[order[k]]=segs[k];
+    }else{
+      segs.forEach((seg,idx)=>{ obj[order[idx]]=seg; });
+    }
+    if(!obj.q||!obj.a){ errors.push({n:i+1,line,reason:'问题或答案为空'}); continue; }
+    rows.push(obj);
+  }
+  // 渲染预览
+  const body=el('<div></div>');
+  if(rows.length){
+    const t=el('<table class="preview-table"><thead><tr><th>#</th><th>问题</th><th>答案</th><th>提示</th></tr></thead><tbody></tbody></table>');
+    rows.forEach((r,idx)=>{
+      const tr=el('<tr></tr>');
+      tr.innerHTML=`<td>${idx+1}</td><td></td><td></td><td>${esc(r.h)||'<span class="small">无</span>'}</td>`;
+      tr.children[1].textContent=r.q; tr.children[2].textContent=r.a;
+      $('tbody',t).appendChild(tr);
+    });
+    body.appendChild(el(`<p class="kv">成功解析 <b>${rows.length}</b> 条，预览如下：</p>`));
+    body.appendChild(t);
+  }
+  if(errors.length){
+    const et=el('<table class="preview-table" style="margin-top:12px"><thead><tr><th>行号</th><th>内容</th><th>原因</th></tr></thead><tbody></tbody></table>');
+    errors.forEach(e=>{
+      const tr=el('<tr class="bad"></tr>');
+      tr.innerHTML=`<td>${e.n}</td><td></td><td>${esc(e.reason)}</td>`;
+      tr.children[1].textContent=e.line.slice(0,40);
+      $('tbody',et).appendChild(tr);
+    });
+    body.appendChild(el(`<p class="kv" style="color:var(--red);margin-top:12px">有 <b>${errors.length}</b> 行不符合格式：</p>`));
+    body.appendChild(et);
+  }
+  openModal({
+    title:'批量添加 · 预览',
+    bodyHtml:'',
+    actions:[
+      {label:'返回修改',ghost:true,onClick:()=>batchAdd(f)},
+      {label:`确认添加 ${rows.length} 条`,onClick:()=>{
+        if(rows.length===0){ toast('没有可添加的内容'); return; }
+        if(errors.length&&!skip){ toast('存在不符合格式的行，请先修正'); return; }
+        rows.forEach(r=>f.items.push(mkItem(r.q,r.a,r.h)));
+        save();render();closeModal();toast(`已添加 ${rows.length} 条`);
+      }},
+    ]
+  });
+  $('.modal-b',modalCtx).appendChild(body);
+}
+
+/* ============================================================
+   导入 / 导出
+   ============================================================ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=el('<a></a>'); a.href=url; a.download='抽背助手数据_'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('已导出数据文件');
+}
+function importData(){
+  const inp=el('<input type="file" accept="application/json,.json" style="display:none">');
+  document.body.appendChild(inp);
+  inp.onchange=()=>{
+    const file=inp.files[0]; document.body.removeChild(inp);
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const d=JSON.parse(reader.result);
+        if(!d||!Array.isArray(d.folders)) throw new Error('格式错误');
+        confirmDlg('导入数据','导入会用文件内容替换当前所有数据，是否继续？',()=>{
+          data=d; if(!data.version)data.version=1;
+          save(); Route.page='home'; render(); toast('导入成功');
+        });
+      }catch(e){ toast('文件格式不正确：'+e.message); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+/* ============================================================
+   通用：输入提示框
+   ============================================================ */
+function promptModal(title,label,{value='',placeholder=''},cb){
+  openModal({
+    title,
+    bodyHtml:`<div class="field"><label>${label}</label><input type="text" id="pm_inp" placeholder="${esc(placeholder)}"></div>`,
+    actions:[
+      {label:'取消',ghost:true,onClick:closeModal},
+      {label:'确定',onClick:()=>{ const v=$('#pm_inp').value; closeModal(); cb(v); }},
+    ]
+  });
+  const input=$('#pm_inp'); input.value=value; input.focus(); input.select();
+  input.onkeydown=e=>{ if(e.key==='Enter'){$('#pm_inp').closest('.modal').querySelector('.modal-f .btn:last-child').click();} };
+}
+
+/* ============================================================
+   图标
+   ============================================================ */
+function svg(paths){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`; }
+function backIcon(){ return svg('<path d="M15 18l-6-6 6-6"/>'); }
+function closeXIcon(){ return svg('<path d="M18 6L6 18M6 6l12 12"/>'); }
+function exportIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>'); }
+function importIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v10"/>'); }
+function editIcon(){ return svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/>'); }
+function trashIcon(){ return svg('<path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>'); }
+function moreIcon(){ return svg('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'); }
+
+function topBar(title,icons,sub){
+  const b=el('<div class="bar"></div>');
+  b.innerHTML=`<div class="t"></div>`;
+  $('.t',b).textContent=title;
+  if(sub){ const s=el('<span class="kv" style="margin-right:4px"></span>'); s.textContent=sub; b.appendChild(s); }
+  (icons||[]).forEach(i=>{
+    const btn=el('<button class="icon-btn" title="'+esc(i.title||'')+'"></button>');
+    btn.innerHTML=i.icon; btn.onclick=i.onClick; b.appendChild(btn);
+  });
+  return b;
+}
+function topBarSimple(left,icons){
+  const b=el('<div class="bar"></div>');
+  const l=el('<div class="t" style="display:flex;align-items:center;gap:8px"></div>');
+  l.innerHTML=left; b.appendChild(l);
+  (icons||[]).forEach(i=>{
+    const btn=el('<button class="icon-btn" title="'+esc(i.title||'')+'"></button>');
+    btn.innerHTML=i.icon; btn.onclick=i.onClick; b.appendChild(btn);
+  });
+  return b;
+}
+
+/* ---------- 启动 ---------- */
 render();
 </script>
 </body>
