@@ -252,9 +252,13 @@ function studyView(){
 }
 function revealHint(){ if(state.study.phase==="q")state.study.phase="h";render() }
 function revealAnswer(){ state.study.phase="a";render() }
+function todayStr(){
+ const d=new Date(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+ return d.getFullYear()+"-"+m+"-"+day
+}
 function markCorrect(){
  const s=state.study,it=s.queue[s.index];
- const today=new Date().toISOString().slice(0,10);
+ const today=todayStr();
  if(it.lastCorrectDate!==today){it.correctCount++;it.lastCorrectDate=today;save()}
  if(s.review)s.queue.splice(s.index,1); else s.index++;
  if(s.review){if(s.index>=s.queue.length)return finishStudy();}else if(s.index>=s.queue.length)return finishStudy();
