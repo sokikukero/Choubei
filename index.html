@@ -60,7 +60,7 @@ function folderView(){
  <div class="muted" style="margin-bottom:12px">${f.items.length} 条内容<span class="hintbox ${state.selectMode?'show':''}" style="margin-left:8px;color:#b77900">· 长按条目可批量选择</span></div>
  ${f.items.length?f.items.map((it,i)=>`<div class="item ${state.selectMode?'selectable':''} ${state.selected&&state.selected.includes(it.id)?'sel':''}" ${state.selectMode?`onclick="toggleSelect('${it.id}')"`:`onclick="preview('${it.id}')"`} ${!state.selectMode?`oncontextmenu="longPress(event,'${it.id}')" ontouchstart="touchStart(event,'${it.id}')" ontouchend="touchEnd()" ontouchmove="touchMove()"` :''}>
  ${state.selectMode?`<span class="itemtick">${state.selected&&state.selected.includes(it.id)?'✓':''}</span>`:''}
- <div style="flex:1">${esc(it.question)}</div><div class="actions"><span class="count ${countClass(it.correctCount)}">${it.correctCount}</span>${!state.selectMode?`<button class="secondary" onclick="editItem('${it.id}')">编辑</button>`:''}</div></div>`).join(""):'<div class="empty">这个文件夹还没有内容。</div>'}</div>`
+ <div style="flex:1">${esc(it.question)}</div><div class="actions"><span class="count ${countClass(it.correctCount)}">${it.correctCount}</span>${!state.selectMode?`<button class="secondary" onclick="event.stopPropagation();editItem('${it.id}')">编辑</button>`:''}</div></div>`).join(""):'<div class="empty">这个文件夹还没有内容。</div>'}</div>`
 }
 function browse(){state.view="browse";render()}
 function browse(){
