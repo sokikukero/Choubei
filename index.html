@@ -785,19 +785,22 @@ function itemEditor({title,folder,item,editing},cb){
 /* ============================================================
    批量添加
    ============================================================ */
-function batchAdd(f){
+function batchAdd(f,keepFmt,keepTxt,keepSkip){
+  const fmtVal = keepFmt!==undefined ? keepFmt : '[问题]/[答案]/[提示]';
+  const txtVal = keepTxt!==undefined ? keepTxt : '';
+  const skipVal = keepSkip!==undefined ? !!keepSkip : true;
   openModal({
     title:'批量添加',
     bodyHtml:`
     <div class="field"><label>自定义格式</label>
-      <input type="text" id="bf_fmt" value="[问题]/[答案]/[提示]">
+      <input type="text" id="bf_fmt" value="${esc(fmtVal)}">
       <div class="hint-t">用 <code>/</code>（半角斜线）分隔各要素，用半角中括号 <code>[</code> <code>]</code> 标示要素位置。提示可选：例如 <code>[问题]/[答案]</code> 表示每行两条。</div>
     </div>
     <div class="field"><label>待解析文本（每行一条）</label>
       <textarea id="bf_txt" rows="8" placeholder="苹果/[apple]/fruit
-早餐/[breakfast]"></textarea>
+早餐/[breakfast]">${esc(txtVal)}</textarea>
     </div>
-    <div class="field"><label class="optbox"><input type="checkbox" id="bf_skip" checked> 解析失败时跳过该行（不勾选则整批取消）</label></div>`,
+    <div class="field"><label class="optbox"><input type="checkbox" id="bf_skip" ${skipVal?'checked':''}> 解析失败时跳过该行（不勾选则整批取消）</label></div>`,
     actions:[
       {label:'取消',ghost:true,onClick:closeModal},
       {label:'解析并预览',onClick:()=>parseBatch(f)},
@@ -864,7 +867,7 @@ function parseBatch(f){
     title:'批量添加 · 预览',
     bodyHtml:'',
     actions:[
-      {label:'返回修改',ghost:true,onClick:()=>batchAdd(f)},
+      {label:'返回修改',ghost:true,onClick:()=>batchAdd(f,fmt,txt,skip)},
       {label:`确认添加 ${rows.length} 条`,onClick:()=>{
         if(rows.length===0){ toast('没有可添加的内容'); return; }
         if(errors.length&&!skip){ toast('存在不符合格式的行，请先修正'); return; }
