@@ -179,15 +179,11 @@ input,textarea{font-family:inherit;font-size:16px}
 .optbox input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri)}
 .num2{display:flex;gap:8px;align-items:center}
 .num2 input{width:80px;text-align:center}
-#st_zero.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+#st_zero.on,#st_top.on,#st_all.on{background:var(--pri);color:#fff;border-color:var(--pri);}
+#st_zero.on svg,#st_top.on svg,#st_all.on svg{stroke:#fff}
+#st_zero:active,#st_top:active,#st_all:active{opacity:.85}
 .small{font-size:12px;color:var(--sub)}
 .danger{color:var(--red)}
-/* 抽背范围按钮的选中态 */
-#st_zero.on,#st_top.on{
-  background:var(--pri);border-color:var(--pri);color:#fff;
-}
-#st_zero.on svg,#st_top.on svg{stroke:#fff}
-#st_zero:active,#st_top:active{opacity:.85}
 .section-title{padding:16px 14px 6px;font-size:13px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
@@ -195,7 +191,6 @@ input,textarea{font-family:inherit;font-size:16px}
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 <div class="mask" id="mask"></div>
-
 <script>
 "use strict";
 /* ============================================================
@@ -206,7 +201,6 @@ const LS_KEY = 'recall_data_v1';
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild;};
 let TOAST_T;
-
 /* ---------- 持久化 ---------- */
 function loadData(){
   try{
@@ -230,10 +224,8 @@ function seed(){
   };
 }
 function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){ toast('保存失败：存储空间可能已满'); } }
-
 let data = loadData();
 if(!data.version){ data.version=1; }
-
 function uid(){ return 'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
 function mkItem(q,a,h=''){ return {id:uid(),q,a,h,dot:0,lastCorrect:null}; }
 function todayStr(d=new Date()){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
@@ -242,7 +234,6 @@ function getFolderOf(itemId){
   for(const f of data.folders){ if(f.items.some(i=>i.id===itemId)) return f; } return null;
 }
 function dotLevel(d){ if(d<=0) return 0; if(d<=3) return 1; if(d<=7) return 2; return 3; }
-
 /* ---------- 路由 ---------- */
 const Route = { page:'home', folderId:null, review:null, previewFolderId:null };
 const folderSort = { folderId:null, kw:'', key:'', dir:1 };
@@ -251,7 +242,6 @@ function sortState(f){
   return folderSort;
 }
 function go(patch){ Object.assign(Route,patch); render(); }
-
 /* ---------- 通用 UI ---------- */
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toast(msg){
@@ -270,7 +260,7 @@ function openModal({title,bodyHtml,actions}){
   const m=el(`<div class="modal">
     <div class="modal-h"><span class="h-title"></span>
       <button class="icon-btn" id="mclose" title="关闭">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
       </button>
     </div>
     <div class="modal-b"></div>
@@ -290,7 +280,6 @@ function openModal({title,bodyHtml,actions}){
 function closeModal(){ const mask=$('#mask'); mask.classList.remove('show'); mask.innerHTML=''; modalCtx=null; }
 function escClose(e){ if(e.key==='Escape') closeModal(); }
 document.addEventListener('keydown',escClose);
-
 /* ============================================================
    页面渲染
    ============================================================ */
@@ -308,7 +297,6 @@ function render(){
     delete Route._scrollY;
   }
 }
-
 /* ---------- 首页：文件夹列表 ---------- */
 function homePage(){
   const root=el('<div></div>');
@@ -343,7 +331,6 @@ function homePage(){
   }
   return root;
 }
-
 /* ---------- 文件夹页 ---------- */
 let selMode=false, selSet=new Set();
 function folderPage(){
@@ -353,7 +340,6 @@ function folderPage(){
   root.appendChild(topBar(f.name,[
     {icon:backIcon(),title:'返回',onClick:()=>{selMode=false;selSet.clear();go({page:'home'});}},
   ], selMode ? `${selSet.size} 项已选` : null));
-
   // 操作条
   const bar=el('<div class="page" style="padding-top:6px"></div>');
   const actions=el('<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>');
@@ -372,7 +358,6 @@ function folderPage(){
   }
   root.appendChild(bar);
   root.appendChild(el(`<div class="longpress-tip" style="padding:0 12px 6px">点击题目进入编辑，点击右侧数字查看提示与答案；长按条目进入批量选择。</div>`));
-
   // 搜索 + 排序 工具栏
   const ss=sortState(f);
   const toolbar=el(`<div class="sortbar">
@@ -388,15 +373,12 @@ function folderPage(){
     </div>
   </div>`);
   root.appendChild(toolbar);
-
   // 列表容器
   const listContainer = el('<div class="card"></div>');
   root.appendChild(listContainer);
-
   // 渲染列表的函数
   function renderList() {
     listContainer.innerHTML = '';
-
     const kw=ss.kw.trim().toLowerCase();
     let view=f.items.filter(it=> !kw || (it.q||'').toLowerCase().includes(kw) || (it.a||'').toLowerCase().includes(kw));
     const lastRank=x=> x.lastCorrect? x.lastCorrect.replace(/-/g,''): (ss.dir>0?'0':'9').repeat(8);
@@ -404,7 +386,6 @@ function folderPage(){
     else if(ss.key==='last') view.sort((a,b)=> ss.dir*( String(lastRank(a)).localeCompare(String(lastRank(b))) ));
     else if(ss.key==='q') view.sort((a,b)=> ss.dir*( (a.q||'').localeCompare((b.q||''),'zh') ));
     else view.sort((a,b)=> f.items.indexOf(a)-f.items.indexOf(b));
-
     if(f.items.length===0){
       listContainer.appendChild(el(`<div class="empty">这个文件夹还是空的，添加一些背诵内容吧</div>`));
     } else if(view.length===0){
@@ -465,7 +446,6 @@ function folderPage(){
       };
       listContainer.appendChild(row);
     });
-
     // 更新重置按钮显示
     const resetBtn = $('.sort-reset', toolbar);
     if (resetBtn) {
@@ -476,10 +456,8 @@ function folderPage(){
       }
     }
   }
-
   // 初始渲染列表
   renderList();
-
   // 搜索输入事件 - 只更新列表，不重新渲染整个页面
   $('.sort-search',toolbar).oninput=e=>{ ss.kw=e.target.value; renderList(); };
   // 排序方向按钮
@@ -492,7 +470,6 @@ function folderPage(){
   });
   // 重置按钮
   $('.sort-reset',toolbar).onclick=()=>{ ss.kw=''; ss.key=''; ss.dir=1; render(); };
-
   return root;
 }
 function enterSel(id){
@@ -506,7 +483,6 @@ function deleteSelected(f){
     selSet.clear();selMode=false;save();render();toast('已删除');
   });
 }
-
 /* ---------- 抽背页 ---------- */
 function startReview(folder){
   const f=getFolder(folder.id);
@@ -536,8 +512,9 @@ function reviewSetupHtml(f){
     <label class="optbox"><input type="checkbox" id="st_rev"> 反转题目和答案（中外↔外中）</label>
   </div>
   <div class="field">
-    <label>抽取范围（三选一，互斥）</label>
+    <label>抽取范围（四选一）</label>
     <div style="display:flex;flex-direction:column;gap:6px">
+      <button type="button" class="btn ghost sm" id="st_all" style="width:100%;justify-content:center">🔵 抽取全部内容</button>
       <button type="button" class="btn ghost sm" id="st_zero" style="width:100%;justify-content:center">仅抽未掌握内容（熟练度为 0）</button>
       <button type="button" class="btn ghost sm" id="st_top" style="width:100%;justify-content:center">熟练度最高内容（当天未复习）</button>
       <label class="optbox" style="padding:8px 0"><input type="checkbox" id="st_limit"> 自定义熟练度范围</label>
@@ -555,9 +532,11 @@ function reviewSetupHtml(f){
 }
 function bindSetup(f){
   const cnt=$('#st_count'), min=$('#st_min'),max=$('#st_max'), lim=$('#st_limit');
-  const zero=$('#st_zero'), top=$('#st_top'), rangeBox=$('#st_range_box'), hint=$('#st_scope_hint');
-  // 单选式切换：点某个选项就选中它（并取消另外两个），点已选中的保持选中，永不全空
+  const allBtn=$('#st_all'), zero=$('#st_zero'), top=$('#st_top'), rangeBox=$('#st_range_box'), hint=$('#st_scope_hint');
+
+  // 四选一互斥
   const select = (which)=>{
+    allBtn.classList.toggle('on', which==='all');
     zero.classList.toggle('on', which==='zero');
     top.classList.toggle('on', which==='top');
     lim.checked = (which==='limit');
@@ -567,7 +546,9 @@ function bindSetup(f){
     const isLim=lim.checked;
     min.disabled=max.disabled=!isLim;
     rangeBox.style.opacity=isLim?'1':'.45';
-    if(zero.classList.contains('on')){
+    if(allBtn.classList.contains('on')){
+      hint.textContent='当前：抽取全部内容。';
+    }else if(zero.classList.contains('on')){
       hint.textContent='当前：仅抽取熟练度为 0 的内容。';
     }else if(top.classList.contains('on')){
       hint.textContent='当前：仅抽取当天尚未复习的、熟练度最高的内容。';
@@ -577,26 +558,32 @@ function bindSetup(f){
       hint.textContent='默认抽取全部内容。';
     }
   };
-  zero.onclick=()=> select(zero.classList.contains('on')?'zero':'zero');
+  allBtn.onclick=()=> select('all');
+  zero.onclick=()=> select('zero');
   top.onclick=()=> select('top');
-  lim.onchange=()=>{ if(lim.checked) select('limit'); else select('zero'); };
-  select('zero');
+  lim.onchange=()=>{ if(lim.checked) select('limit'); else select('all'); };
+  select('all'); // 默认选中全部
 }
 function doStart(f){
-  const cfg={count:1,order:'seq',reverse:false,limit:false,min:0,max:0,top:false,zero:false};
+  const cfg={count:1,order:'seq',reverse:false,limit:false,min:0,max:0,top:false,zero:false,all:true};
   cfg.count=Math.max(1,parseInt($('#st_count').value||'1')||1);
   cfg.order=$('#st_order').value;
   cfg.reverse=$('#st_rev').checked;
+
+  cfg.all = $('#st_all').classList.contains('on');
   cfg.zero=$('#st_zero').classList.contains('on');
   cfg.top=$('#st_top').classList.contains('on');
-  cfg.limit=cfg.zero || cfg.top || $('#st_limit').checked;
+  cfg.limit=$('#st_limit').checked;
+
   cfg.min=cfg.zero? 0 : Math.max(0,parseInt($('#st_min').value||'0')||0);
   cfg.max=cfg.zero? 0 : Math.max(cfg.min,parseInt($('#st_max').value||'0')||0);
+
   const today=todayStr();
   let pool=f.items.filter(i=>{
+    if(cfg.all) return true;
     if(cfg.zero) return i.dot===0;
     if(cfg.top) return i.lastCorrect!==today;
-    if($('#st_limit').checked) return i.dot>=cfg.min && i.dot<=cfg.max;
+    if(cfg.limit) return i.dot>=cfg.min && i.dot<=cfg.max;
     return true;
   });
   if(cfg.top && pool.length>0){
@@ -620,7 +607,6 @@ function doStart(f){
   go({page:'review'});
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;}
-
 function reviewPage(){
   const st=Route.review;
   if(!st) return el('<div class="empty">会话已结束</div>');
@@ -660,7 +646,6 @@ function reviewPage(){
   err.onclick=()=>mark(false); ok.onclick=()=>mark(true);
   rb.append(err,ok); root.appendChild(rb);
   return root;
-
   function mark(correct){
     const st2=Route.review;
     const it2=st2.queue[st2.idx];
@@ -719,7 +704,6 @@ function startWrongReview(items){
   st.revQ=st.revH=st.revA=false;
   render();
 }
-
 /* ---------- 预览页 ---------- */
 let prevReveal=new Set();
 function previewPage(){
@@ -755,7 +739,6 @@ function previewPage(){
   root.appendChild(list);
   return root;
 }
-
 /* ============================================================
    文件夹 CRUD
    ============================================================ */
@@ -776,7 +759,6 @@ function deleteFolder(f){
     data.folders=data.folders.filter(x=>x.id!==f.id); save(); render(); toast('已删除');
   });
 }
-
 /* ============================================================
    条目 CRUD / 编辑
    ============================================================ */
@@ -819,7 +801,6 @@ function itemEditor({title,folder,item,editing},cb){
   });
   $('#ie_q').value=item.q; $('#ie_a').value=item.a; $('#ie_h').value=item.h; $('#ie_dot').value=item.dot;
 }
-
 /* ============================================================
    批量添加
    ============================================================ */
@@ -916,7 +897,6 @@ function parseBatch(f){
   });
   $('.modal-b',modalCtx).appendChild(body);
 }
-
 /* ============================================================
    导入 / 导出
    ============================================================ */
@@ -949,7 +929,6 @@ function importData(){
   };
   inp.click();
 }
-
 /* ============================================================
    通用：输入提示框
    ============================================================ */
@@ -965,19 +944,17 @@ function promptModal(title,label,{value='',placeholder=''},cb){
   const input=$('#pm_inp'); input.value=value; input.focus(); input.select();
   input.onkeydown=e=>{ if(e.key==='Enter'){$('#pm_inp').closest('.modal').querySelector('.modal-f .btn:last-child').click();} };
 }
-
 /* ============================================================
    图标
    ============================================================ */
 function svg(paths){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`; }
-function backIcon(){ return svg('<path d="M15 18l-6-6 6-6"/>'); }
-function closeXIcon(){ return svg('<path d="M18 6L6 18M6 6l12 12"/>'); }
-function exportIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>'); }
-function importIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v10"/>'); }
-function editIcon(){ return svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/>'); }
-function trashIcon(){ return svg('<path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>'); }
-function moreIcon(){ return svg('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'); }
-
+function backIcon(){ return svg('<path d="M15 18l-6-6 6-6" />'); }
+function closeXIcon(){ return svg('<path d="M18 6L6 18M6 6l12 12" />'); }
+function exportIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" />'); }
+function importIcon(){ return svg('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5-5 5 5" /><path d="M12 5v10" />'); }
+function editIcon(){ return svg('<path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />'); }
+function trashIcon(){ return svg('<path d="M3 6h18" /><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />'); }
+function moreIcon(){ return svg('<circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />'); }
 function topBar(title,icons,sub){
   const b=el('<div class="bar"></div>');
   b.innerHTML=`<div class="t"></div>`;
@@ -999,9 +976,9 @@ function topBarSimple(left,icons){
   });
   return b;
 }
-
 /* ---------- 启动 ---------- */
 render();
 </script>
 </body>
 </html>
+<!-- （注：内容由AI生成） -->
