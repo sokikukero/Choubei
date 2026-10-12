@@ -182,6 +182,12 @@ input,textarea{font-family:inherit;font-size:16px}
 #st_zero.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .small{font-size:12px;color:var(--sub)}
 .danger{color:var(--red)}
+/* 抽背范围按钮的选中态 */
+#st_zero.on,#st_top.on{
+  background:var(--pri);border-color:var(--pri);color:#fff;
+}
+#st_zero.on svg,#st_top.on svg{stroke:#fff}
+#st_zero:active,#st_top:active{opacity:.85}
 .section-title{padding:16px 14px 6px;font-size:13px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
@@ -530,41 +536,73 @@ function reviewSetupHtml(f){
     <label class="optbox"><input type="checkbox" id="st_rev"> 反转题目和答案（中外↔外中）</label>
   </div>
   <div class="field">
-    <button type="button" class="btn ghost sm" id="st_zero" style="width:100%;justify-content:center">仅抽未掌握内容（熟练度为 0）</button>
-    <div class="hint-t">勾选后仅抽取熟练度为 0 的内容，优先于下方的限定范围设置。</div>
+    <label>抽取范围（三选一，互斥）</label>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button type="button" class="btn ghost sm" id="st_zero" style="width:100%;justify-content:center">仅抽未掌握内容（熟练度为 0）</button>
+      <button type="button" class="btn ghost sm" id="st_top" style="width:100%;justify-content:center">熟练度最高内容（当天未复习）</button>
+      <label class="optbox" style="padding:8px 0"><input type="checkbox" id="st_limit"> 自定义熟练度范围</label>
+    </div>
+    <div class="hint-t" id="st_scope_hint">默认抽取全部内容。</div>
   </div>
-  <div class="field">
-    <label class="optbox"><input type="checkbox" id="st_limit"> 限定熟练度（正确次数范围）</label>
-    <div class="num2" style="margin-top:6px">
+  <div class="field" id="st_range_box">
+    <label>熟练度范围</label>
+    <div class="num2">
       <input type="number" id="st_min" value="0" min="0"><span>至</span>
       <input type="number" id="st_max" value="999" min="0">
     </div>
+    <div class="hint-t">仅在勾选"自定义熟练度范围"时生效。</div>
   </div>`;
 }
 function bindSetup(f){
-  const cnt=$('#st_count'), min=$('#st_min'),max=$('#st_max');
-  const lim=$('#st_limit'), zero=$('#st_zero');
-  const toggle=()=>{min.disabled=max.disabled=!lim.checked;};
-  lim.onchange=toggle; toggle();
-  const syncZero=()=>{
-    const on=zero.classList.contains('on');
-    lim.checked=on;
-    toggle();
-    if(on){ min.value='0'; max.value='0'; }
+  const cnt=$('#st_count'), min=$('#st_min'),max=$('#st_max'), lim=$('#st_limit');
+  const zero=$('#st_zero'), top=$('#st_top'), rangeBox=$('#st_range_box'), hint=$('#st_scope_hint');
+  // 单选式切换：点某个选项就选中它（并取消另外两个），点已选中的保持选中，永不全空
+  const select = (which)=>{
+    zero.classList.toggle('on', which==='zero');
+    top.classList.toggle('on', which==='top');
+    lim.checked = (which==='limit');
+    sync();
   };
-  zero.onclick=()=>{ zero.classList.toggle('on'); syncZero(); };
-  lim.onchange=()=>{ if(!lim.checked) zero.classList.remove('on'); toggle(); };
+  const sync=()=>{
+    const isLim=lim.checked;
+    min.disabled=max.disabled=!isLim;
+    rangeBox.style.opacity=isLim?'1':'.45';
+    if(zero.classList.contains('on')){
+      hint.textContent='当前：仅抽取熟练度为 0 的内容。';
+    }else if(top.classList.contains('on')){
+      hint.textContent='当前：仅抽取当天尚未复习的、熟练度最高的内容。';
+    }else if(isLim){
+      hint.textContent='当前：按下方自定义熟练度范围抽取。';
+    }else{
+      hint.textContent='默认抽取全部内容。';
+    }
+  };
+  zero.onclick=()=> select(zero.classList.contains('on')?'zero':'zero');
+  top.onclick=()=> select('top');
+  lim.onchange=()=>{ if(lim.checked) select('limit'); else select('zero'); };
+  select('zero');
 }
 function doStart(f){
-  const cfg={count:1,order:'seq',reverse:false,limit:false,min:0,max:0};
+  const cfg={count:1,order:'seq',reverse:false,limit:false,min:0,max:0,top:false,zero:false};
   cfg.count=Math.max(1,parseInt($('#st_count').value||'1')||1);
   cfg.order=$('#st_order').value;
   cfg.reverse=$('#st_rev').checked;
   cfg.zero=$('#st_zero').classList.contains('on');
-  cfg.limit=cfg.zero || $('#st_limit').checked;
+  cfg.top=$('#st_top').classList.contains('on');
+  cfg.limit=cfg.zero || cfg.top || $('#st_limit').checked;
   cfg.min=cfg.zero? 0 : Math.max(0,parseInt($('#st_min').value||'0')||0);
   cfg.max=cfg.zero? 0 : Math.max(cfg.min,parseInt($('#st_max').value||'0')||0);
-  let pool=f.items.filter(i=>!cfg.limit || (i.dot>=cfg.min && i.dot<=cfg.max));
+  const today=todayStr();
+  let pool=f.items.filter(i=>{
+    if(cfg.zero) return i.dot===0;
+    if(cfg.top) return i.lastCorrect!==today;
+    if($('#st_limit').checked) return i.dot>=cfg.min && i.dot<=cfg.max;
+    return true;
+  });
+  if(cfg.top && pool.length>0){
+    const maxDot=Math.max(...pool.map(i=>i.dot));
+    pool=pool.filter(i=>i.dot===maxDot);
+  }
   if(pool.length===0){toast('当前条件下没有可选内容');return;}
   if(cfg.count>pool.length) cfg.count=pool.length;
   let queue=[];
