@@ -82,12 +82,16 @@ input,textarea{font-family:inherit;font-size:16px}
 .folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:12px}
 .folder-card{
   background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
-  padding:16px;display:flex;flex-direction:column;gap:6px;position:relative;cursor:pointer;
-  min-height:96px;
+  padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;cursor:pointer;
+  min-height:128px;
 }
 .folder-card:active{background:#f8f9fb}
 .folder-card .fn{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.folder-card .fc{font-size:12px;color:var(--sub)}
+.folder-card .fc{font-size:12px;color:var(--sub);line-height:1.7}
+.folder-card .fc .fc-txt{color:var(--sub)}
+.folder-card .fc .fc-today{color:var(--green);font-weight:600}
+.folder-card .fc .fc-warn{color:var(--amber);font-weight:600}
+.folder-card .fc .fc-none{color:var(--gray)}
 .folder-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:.3}
 .folder-card:hover .folder-actions,.folder-card:active .folder-actions{opacity:1}
 .folder-actions button{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
@@ -234,6 +238,36 @@ function getFolderOf(itemId){
   for(const f of data.folders){ if(f.items.some(i=>i.id===itemId)) return f; } return null;
 }
 function dotLevel(d){ if(d<=0) return 0; if(d<=3) return 1; if(d<=7) return 2; return 3; }
+/* 文件夹复习时间文案：以文件夹内最近一次复习的条目为准 */
+function folderReviewInfo(f){
+  const dates=f.items.map(i=>i&&i.lastCorrect).filter(Boolean);
+  if(dates.length===0) return '尚未复习过';
+  // 找最近的复习日期（lastCorrect 为 "YYYY-MM-DD" 格式）
+  let newest=dates[0];
+  for(const d of dates){ if(String(d).localeCompare(String(newest))>0) newest=d; }
+  const today=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  const todayStr0=today.getFullYear()+'-'+p(today.getMonth()+1)+'-'+p(today.getDate());
+  if(newest===todayStr0) return '今天已复习';
+  const [y,m,d]=newest.split('-').map(Number);
+  const that=new Date(y,m-1,d);
+  const diff=Math.floor((today-that)/86400000); // 按日期差计算天数
+  if(diff<=0) return '今天已复习'; // 跨时区/异常兜底
+  if(diff===1) return '上次复习：1天前';
+  return `上次复习：${diff}天前`;
+}
+/* 带颜色的复习状态：今天已复习(绿) / 超过3天(琥珀) / 其他(灰) */
+function reviewInfoHtml(f){
+  const info=folderReviewInfo(f);
+  let cls='fc-txt';
+  if(info==='今天已复习') cls='fc-today';
+  else if(info==='尚未复习过') cls='fc-none';
+  else{
+    const m=info.match(/(\d+)天前/);
+    if(m && Number(m[1])>=3) cls='fc-warn';
+  }
+  return `<span class="${cls}">${esc(info)}</span>`;
+}
 /* ---------- 路由 ---------- */
 const Route = { page:'home', folderId:null, review:null, previewFolderId:null };
 const folderSort = { folderId:null, kw:'', key:'', dir:1 };
@@ -315,7 +349,7 @@ function homePage(){
       <div class="fn"></div><div class="fc"></div>
     </div>`);
     $('.fn',card).textContent=f.name;
-    $('.fc',card).textContent=`${total} 条内容`;
+    $('.fc',card).innerHTML=`<div>${total} 条内容</div><div>${reviewInfoHtml(f)}</div>`;
     card.onclick=()=>go({page:'folder',folderId:f.id});
     card.onkeydown=e=>{if(e.key==='Enter')card.click();};
     $('.folder-actions button:first-child',card).onclick=e=>{e.stopPropagation();renameFolder(f);};
